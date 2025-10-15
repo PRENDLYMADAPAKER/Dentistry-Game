@@ -170,26 +170,39 @@ function loadJSON(k){try{const s=localStorage.getItem(k);return s?JSON.parse(s):
 /* ------------ Wordscape ------------ */
 let wordList=[],currentWord='',shuffledLetters=[],selectedArr=[],wsScore=0,wsTimeLeft=15;
 async function loadWordList(){
-  const cacheKey='cached_words_v1';
-  try{
-    const res=await fetch(wordURL,{cache:'no-store'});
-    if(!res.ok)throw new Error('Bad status');
-    const data=await res.json();
-    let arr=[];
-    if(Array.isArray(data))arr=data;
-    else if(Array.isArray(data.words))arr=data.words;
-    else if(Array.isArray(data.wordList))arr=data.wordList;
-    else if(Array.isArray(data.data))arr=data.data;
-    else throw new Error('Invalid structure');
-    wordList=arr.map(w=>String(w).trim().toUpperCase()).filter(Boolean);
-    saveJSON(cacheKey,wordList);
-    console.log('✅ Loaded remote words',wordList.length);
-  }catch(e){
-    const cached=loadJSON(cacheKey);
-    if(cached&&cached.length){wordList=cached;console.log('📦 Loaded cached words');}
-    else{console.warn('⚠️ Using fallback words');wordList=["ENAMEL","CROWN","MOLAR","PLAQUE","DENTIN","PULP","CARIES","GINGIVA"];}
+  const cacheKey = 'cached_words_v1';
+  try {
+    // Always force re-fetch
+    const res = await fetch(wordURL, { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+
+    // GitHub sometimes sends text/plain, so handle both cases
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.warn("Response not JSON — retrying parse...");
+      data = JSON.parse(text.replace(/,\s*]/, "]")); // handle trailing comma
+    }
+
+    // At this point we expect an array
+    if (!Array.isArray(data)) throw new Error("Unexpected format");
+    wordList = data.map(w => String(w).trim().toUpperCase()).filter(Boolean);
+    saveJSON(cacheKey, wordList);
+    console.log(`✅ Word list loaded from remote (${wordList.length} words)`);
+  } catch (err) {
+    console.warn("⚠️ Could not load remote JSON:", err);
+    const cached = loadJSON(cacheKey);
+    if (cached && cached.length) {
+      wordList = cached;
+      console.log(`📦 Loaded ${cached.length} cached words`);
+    } else {
+      wordList = ["ENAMEL","CROWN","MOLAR","PLAQUE","DENTIN","PULP","CARIES","GINGIVA"];
+      console.log("💾 Using fallback words");
+    }
   }
-}
+  }
 async function startWordscape(){
   stopAllTimers();openGamePanel();backspaceBtn.style.display='inline-block';
   await loadWordList();
