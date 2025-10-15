@@ -175,41 +175,97 @@ function refreshHS(){
 refreshHS();
 
 /* ---------- WORDSCAPE ---------- */
-let wordList=window.dentalWords||["ENAMEL","CROWN","MOLAR"],currentWord="",shuffled=[],sel=[],wsScore=0;
+let wordList=window.dentalWords||["ENAMEL","CROWN","MOLAR"],
+    currentWord="",shuffled=[],sel=[],wsScore=0;
+
 function startWordscape(){
+  // Support both string and object formats
   wordList = window.dentalWords.map(w => 
-  (typeof w === "string" ? w : w.word).toUpperCase()
-);
-  openPanel();backspaceBtn.style.display="inline-block";
-  wsScore=getHS(KEY_HS_WORD);scoreDisplay.textContent=wsScore;
+    (typeof w === "string" ? w : w.word).toUpperCase()
+  );
+  openPanel();
+  backspaceBtn.style.display = "inline-block";
+  wsScore = getHS(KEY_HS_WORD);
+  scoreDisplay.textContent = wsScore;
   nextWord();
 }
+
 function nextWord(){
- stopTimers();sel=[];
- currentWord=wordList[Math.floor(Math.random()*wordList.length)];
- shuffled=shuffle(currentWord.split(""));
- renderWordscape();
- startCountdown(15,null,()=>{playSFX("timeout");nextWord();});
+  stopTimers(); // no timer anymore, but keep it clean
+  sel = [];
+  currentWord = wordList[Math.floor(Math.random() * wordList.length)];
+  shuffled = shuffle(currentWord.split(""));
+  renderWordscape();
 }
+
 function renderWordscape(){
- questionEl.textContent="Form the word";
- contentArea.innerHTML=`
-   <div class="word-row">${sel.map((c,i)=>`<div class='letter-chip' data-i='${i}'>${c}</div>`).join("")}</div>
-   <div class="word-row">${shuffled.map((ch,i)=>`<button class='option-btn' data-i='${i}' ${ch===''?'disabled':''}>${ch}</button>`).join("")}</div>`;
- contentArea.querySelectorAll(".option-btn").forEach(btn=>{
-   btn.onclick=()=>{const i=btn.dataset.i;if(btn.disabled)return;playSFX("click");
-     sel.push(shuffled[i]);shuffled[i]="";renderWordscape();
-     if(sel.join("")===currentWord){playSFX("correct");wsScore+=10;setHS(KEY_HS_WORD,wsScore);
-       scoreDisplay.textContent=wsScore;setTimeout(nextWord,800);}
-   };
- });
- contentArea.querySelectorAll(".letter-chip").forEach(c=>{
-   c.onclick=()=>{const i=c.dataset.i;const ch=sel.splice(i,1)[0];
-     const empty=shuffled.indexOf("");if(empty!==-1)shuffled[empty]=ch;else shuffled.push(ch);
-     renderWordscape();};
- });
- backspaceBtn.onclick=()=>{if(sel.length){const r=sel.pop();const e=shuffled.indexOf("");if(e!==-1)shuffled[e]=r;else shuffled.push(r);renderWordscape();}};
-}
+  questionEl.textContent = "Form the word";
+  contentArea.innerHTML = `
+    <div class="word-row">
+      ${sel.map((c,i)=>`<div class='letter-chip' data-i='${i}'>${c}</div>`).join("")}
+    </div>
+    <div class="word-row">
+      ${shuffled.map((ch,i)=>`<button class='option-btn' data-i='${i}' ${ch===''?'disabled':''}>${ch}</button>`).join("")}
+    </div>
+    <div style='text-align:center;margin-top:12px;'>
+      <button class='option-btn' id='shuffleBtn'>🔀 Shuffle</button>
+      <button class='option-btn' id='skipBtn'>⏭ Next Word</button>
+    </div>
+  `;
+
+  // Click letter buttons
+  contentArea.querySelectorAll(".option-btn[data-i]").forEach(btn=>{
+    btn.onclick = () => {
+      const i = btn.dataset.i;
+      if(btn.disabled) return;
+      playSFX("click");
+      sel.push(shuffled[i]);
+      shuffled[i] = "";
+      renderWordscape();
+      if(sel.join("") === currentWord){
+        playSFX("correct");
+        wsScore += 10;
+        setHS(KEY_HS_WORD, wsScore);
+        scoreDisplay.textContent = wsScore;
+        setTimeout(nextWord, 800);
+      }
+    };
+  });
+
+  // Remove selected letters
+  contentArea.querySelectorAll(".letter-chip").forEach(c=>{
+    c.onclick = () => {
+      const i = c.dataset.i;
+      const ch = sel.splice(i,1)[0];
+      const empty = shuffled.indexOf("");
+      if(empty !== -1) shuffled[empty] = ch; else shuffled.push(ch);
+      renderWordscape();
+    };
+  });
+
+  // Shuffle and Skip controls
+  const shuffleBtn = document.getElementById("shuffleBtn");
+  const skipBtn = document.getElementById("skipBtn");
+  shuffleBtn.onclick = () => { 
+    playSFX("click");
+    shuffled = shuffle(currentWord.split(""));
+    renderWordscape(); 
+  };
+  skipBtn.onclick = () => { 
+    playSFX("click");
+    nextWord(); 
+  };
+
+  // Backspace support
+  backspaceBtn.onclick = () => {
+    if(sel.length){
+      const r = sel.pop();
+      const e = shuffled.indexOf("");
+      if(e !== -1) shuffled[e] = r; else shuffled.push(r);
+      renderWordscape();
+    }
+  };
+  }
 
 /* ---------- QUIZ ---------- */
 let quizData=window.dentalQuiz||[],quizIndex=0,quizScore=getHS(KEY_HS_QUIZ);
