@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Dental Hub Games</title>
+
+<!-- ✅ ORIGINAL STYLING KEPT -->
+<style>
+:root{--accent:#00eaff;--accent2:#00ffb7;--glass-bg:rgba(0,40,80,0.36);--muted:#b6eaff;--white:#fff;}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial;
+background:radial-gradient(circle at top left,#001427 0%,#00111f 35%,#000814 100%);
+color:var(--white);min-height:100vh;overflow-x:hidden;}
+.bubbles{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+.bubble{position:absolute;bottom:-120px;border-radius:50%;background:rgba(255,255,255,0.12);
+filter:blur(.6px);animation:rise linear infinite;box-shadow:0 6px 18px rgba(0,200,255,0.035);}
+@keyframes rise{0%{transform:translateY(0) scale(1);opacity:.9;}
+100%{transform:translateY(-140vh) scale(1.6);opacity:0;}}
+header{text-align:center;padding-top:30px;z-index:2;position:relative;}
+header h1{margin:0;font-size:28px;letter-spacing:1px;
+background:linear-gradient(90deg,var(--accent),var(--accent2));
+-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+header p{margin:6px 0 0;font-style:italic;color:var(--muted);}
+main{z-index:2;position:relative;padding:28px 18px 60px;
+display:flex;flex-direction:column;align-items:center;gap:20px;}
+.home{display:flex;flex-direction:column;gap:16px;width:100%;max-width:920px;align-items:center;}
+.tile{width:92%;max-width:720px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));
+border-radius:20px;padding:18px;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:12px;
+border:1px solid rgba(255,255,255,0.04);cursor:pointer;transition:.22s;backdrop-filter:blur(10px);}
+.tile:hover{transform:translateY(-6px);box-shadow:0 30px 60px rgba(0,0,0,0.35);}
+.tile .left{display:flex;align-items:center;gap:14px;}
+.tile .icon{width:56px;height:56px;border-radius:12px;display:grid;place-items:center;font-weight:800;
+background:linear-gradient(135deg,var(--accent),var(--accent2));color:#002;
+box-shadow:0 8px 30px rgba(0,224,255,0.08);}
+.tile h3{margin:0;font-size:18px;}
+.tile p{margin:4px 0 0;color:var(--muted);font-size:13px;}
+.game-area{display:none;width:100%;max-width:920px;justify-content:center;padding:24px;}
+.game-panel{width:92%;max-width:640px;margin:0 auto;background:var(--glass-bg);
+border-radius:20px;padding:20px;color:var(--white);backdrop-filter:blur(14px) saturate(150%);
+border:1px solid rgba(255,255,255,0.08);box-shadow:0 30px 80px rgba(0,0,0,0.45);
+opacity:0;transform:scale(.98) translateY(10px);
+transition:.36s cubic-bezier(.2,.9,.3,1);}
+.game-panel.show{opacity:1;transform:scale(1) translateY(0);}
+.game-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;}
+.home-btn{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.06);
+color:var(--white);padding:8px 12px;border-radius:12px;cursor:pointer;}
+.home-btn:hover{background:rgba(255,255,255,0.09);transform:translateY(-2px);}
+.game-stats{display:flex;align-items:center;gap:12px;font-weight:700;color:var(--muted);}
+.game-stats span strong{color:var(--white);margin-left:6px;}
+h2#question{text-align:center;margin:16px 0 18px;font-size:20px;}
+.options{display:flex;flex-direction:column;gap:10px;}
+.option-btn{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));
+border:1px solid rgba(255,255,255,0.06);padding:12px;border-radius:12px;color:var(--white);
+font-weight:700;cursor:pointer;transition:.16s;}
+.option-btn:hover{transform:translateY(-4px);background:rgba(255,255,255,0.03);}
+.word-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:12px 0;}
+.letter-chip{background:rgba(255,255,255,0.04);padding:8px 10px;border-radius:8px;font-weight:800;cursor:pointer;}
+.controls{position:fixed;right:18px;bottom:18px;z-index:10;display:flex;gap:8px;}
+.circle-btn{width:46px;height:46px;border-radius:50%;border:none;
+background:rgba(255,255,255,0.05);color:var(--white);cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,0.4);}
+@media(max-width:700px){header h1{font-size:20px;}.tile{width:94%;}.game-panel{width:94%;padding:16px;border-radius:16px;}}
+</style>
+</head>
+<body>
+<div class="bubbles" id="bubbles"></div>
+
+<header>
+  <h1>DENTAL HUB GAMES</h1>
+  <p><i>Test your knowledge</i></p>
+</header>
+
+<main>
+  <section class="home" id="home">
+    <div class="tile" id="openWordscape"><div class="left">
+      <div class="icon">🧩</div><div><h3>Dental Wordscape</h3><p>Form dental terms from letters</p></div></div>
+      <div class="meta"><strong id="hsWord">0</strong> pts</div>
+    </div>
+    <div class="tile" id="openQuiz"><div class="left">
+      <div class="icon">📘</div><div><h3>Dental Quiz Game</h3><p>Timed multiple-choice (15s)</p></div></div>
+      <div class="meta"><strong id="hsQuiz">0</strong> pts</div>
+    </div>
+    <div class="tile" id="openCase"><div class="left">
+      <div class="icon">💬</div><div><h3>Case Challenge</h3><p>Clinical scenario practice</p></div></div>
+      <div class="meta"><strong id="hsCase">0</strong> pts</div>
+    </div>
+  </section>
+
+  <section class="game-area" id="gameArea" aria-hidden="true">
+    <div class="game-panel" id="gamePanel">
+      <div class="game-header">
+        <button class="home-btn" id="btnHome">🏠</button>
+        <div class="game-stats">
+          <span>Score <strong id="scoreDisplay">0</strong></span>
+          <span>⏱ <strong id="timerDisplay">15</strong>s</span>
+        </div>
+      </div>
+      <h2 id="question">Loading...</h2>
+      <div id="contentArea"></div>
+    </div>
+  </section>
+</main>
+
+<div class="controls">
+  <button id="muteBtn" class="circle-btn" title="Mute / Unmute">🔊</button>
+  <button id="backspaceBtn" class="circle-btn" title="Undo last (Wordscape)">⌫</button>
+</div>
+
+<!-- 🎵 Background Audio -->
+<audio id="bgAudio" loop crossorigin="anonymous">
+  <source src="https://cdn.pixabay.com/download/audio/2023/03/08/audio_6e56e3a30a.mp3?filename=relaxing-background-music-141069.mp3" type="audio/mpeg">
+</audio>
+
+<!-- ✅ LOCAL DATA FILES -->
+<script src="dental_words.js"></script>
+<script src="dental_quiz.js"></script>
+<script src="dental_cases.js"></script>
+
+<!-- PART 2 starts below -->
+<script>
+/* ---------- Shortcuts ---------- */
+const homeEl=document.getElementById("home"),
+gameArea=document.getElementById("gameArea"),
+gamePanel=document.getElementById("gamePanel"),
+contentArea=document.getElementById("contentArea"),
+questionEl=document.getElementById("question"),
+scoreDisplay=document.getElementById("scoreDisplay"),
+timerDisplay=document.getElementById("timerDisplay"),
+btnHome=document.getElementById("btnHome"),
+muteBtn=document.getElementById("muteBtn"),
+backspaceBtn=document.getElementById("backspaceBtn"),
+bgAudio=document.getElementById("bgAudio");
+
+function playSFX(name){if(!muted){const a=sfx[name];if(a){a.currentTime=0;a.play().catch(()=>{});}}}
+let muted=localStorage.getItem("muted")==="true";
+const sfx={
+ click:new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_0f0f3f2c2a.mp3?filename=soft-click-6002.mp3"),
+ correct:new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_7e7c1e3b36.mp3?filename=correct-2-46134.mp3"),
+ wrong:new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_262f2667c2.mp3?filename=error-126627.mp3"),
+ timeout:new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_d4a5e562c2.mp3?filename=timeout-107404.mp3")
+};
+Object.values(sfx).forEach(a=>a.preload="auto");
+bgAudio.volume=.16;bgAudio.loop=true;bgAudio.muted=muted;
+bgAudio.play().catch(()=>{});
+muteBtn.textContent=muted?"🔇":"🔊";
+muteBtn.onclick=()=>{muted=!muted;localStorage.setItem("muted",muted);
+bgAudio.muted=muted;muteBtn.textContent=muted?"🔇":"🔊";};
+
+/* ---------- Helpers ---------- */
+function shuffle(a){return a.slice().sort(()=>Math.random()-.5);}
+let currentTimer=null;
+function startCountdown(sec,onTick,onExpire){
+ clearInterval(currentTimer);
+ let t=sec;
+ timerDisplay.textContent=t;
+ currentTimer=setInterval(()=>{
+  t--;timerDisplay.textContent=t;
+  if(onTick)onTick(t);
+  if(t<=0){clearInterval(currentTimer);currentTimer=null;onExpire&&onExpire();}
+ },1000);
+}
+function stopTimers(){clearInterval(currentTimer);}
+function saveJSON(k,v){localStorage.setItem(k,JSON.stringify(v));}
+function loadJSON(k){try{return JSON.parse(localStorage.getItem(k));}catch{return null;}}
+
+/* ---------- HIGH SCORES ---------- */
+const KEY_HS_WORD="dh_hs_word",KEY_HS_QUIZ="dh_hs_quiz",KEY_HS_CASE="dh_hs_case";
+function getHS(k){return Number(localStorage.getItem(k)||0);}
+function setHS(k,v){localStorage.setItem(k,String(v));}
+function refreshHS(){
+ document.getElementById("hsWord").textContent=getHS(KEY_HS_WORD);
+ document.getElementById("hsQuiz").textContent=getHS(KEY_HS_QUIZ);
+ document.getElementById("hsCase").textContent=getHS(KEY_HS_CASE);
+}
+refreshHS();
+
+/* ---------- WORDSCAPE ---------- */
+let wordList=window.dentalWords||["ENAMEL","CROWN","MOLAR"],currentWord="",shuffled=[],sel=[],wsScore=0;
+function startWordscape(){
+  wordList=window.dentalWords.map(w=>w.toUpperCase());
+  openPanel();backspaceBtn.style.display="inline-block";
+  wsScore=getHS(KEY_HS_WORD);scoreDisplay.textContent=wsScore;
+  nextWord();
+}
+function nextWord(){
+ stopTimers();sel=[];
+ currentWord=wordList[Math.floor(Math.random()*wordList.length)];
+ shuffled=shuffle(currentWord.split(""));
+ renderWordscape();
+ startCountdown(15,null,()=>{playSFX("timeout");nextWord();});
+}
+function renderWordscape(){
+ questionEl.textContent="Form the word";
+ contentArea.innerHTML=`
+   <div class="word-row">${sel.map((c,i)=>`<div class='letter-chip' data-i='${i}'>${c}</div>`).join("")}</div>
+   <div class="word-row">${shuffled.map((ch,i)=>`<button class='option-btn' data-i='${i}' ${ch===''?'disabled':''}>${ch}</button>`).join("")}</div>`;
+ contentArea.querySelectorAll(".option-btn").forEach(btn=>{
+   btn.onclick=()=>{const i=btn.dataset.i;if(btn.disabled)return;playSFX("click");
+     sel.push(shuffled[i]);shuffled[i]="";renderWordscape();
+     if(sel.join("")===currentWord){playSFX("correct");wsScore+=10;setHS(KEY_HS_WORD,wsScore);
+       scoreDisplay.textContent=wsScore;setTimeout(nextWord,800);}
+   };
+ });
+ contentArea.querySelectorAll(".letter-chip").forEach(c=>{
+   c.onclick=()=>{const i=c.dataset.i;const ch=sel.splice(i,1)[0];
+     const empty=shuffled.indexOf("");if(empty!==-1)shuffled[empty]=ch;else shuffled.push(ch);
+     renderWordscape();};
+ });
+ backspaceBtn.onclick=()=>{if(sel.length){const r=sel.pop();const e=shuffled.indexOf("");if(e!==-1)shuffled[e]=r;else shuffled.push(r);renderWordscape();}};
+}
+
+/* ---------- QUIZ ---------- */
+let quizData=window.dentalQuiz||[],quizIndex=0,quizScore=getHS(KEY_HS_QUIZ);
+function startQuiz(){
+ openPanel();backspaceBtn.style.display="none";quizScore=getHS(KEY_HS_QUIZ);
+ renderQuiz();
+}
+function renderQuiz(){
+ stopTimers();const q=quizData[quizIndex];
+ if(!q){questionEl.textContent="No questions.";contentArea.innerHTML="";return;}
+ questionEl.textContent=q.question;
+ contentArea.innerHTML=`<div class='options'>${q.options.map(o=>`<button class='option-btn'>${o}</button>`).join("")}</div>
+ <div style='text-align:center;margin-top:10px;'>
+   <button class='option-btn' id='prevQ'>⬅️ Prev</button>
+   <button class='option-btn' id='nextQ'>Next ➡️</button>
+ </div>`;
+ contentArea.querySelectorAll(".option-btn").forEach(b=>{
+  if(b.id)return;
+  b.onclick=()=>{playSFX("click");stopTimers();
+   if(b.textContent.trim().toLowerCase()===q.answer.trim().toLowerCase()){
+     playSFX("correct");quizScore+=10;setHS(KEY_HS_QUIZ,quizScore);}
+   else playSFX("wrong");
+   scoreDisplay.textContent=quizScore;
+   setTimeout(()=>{quizIndex=(quizIndex+1)%quizData.length;renderQuiz();},700);
+  };
+ });
+ document.getElementById("prevQ").onclick=()=>{quizIndex=(quizIndex-1+quizData.length)%quizData.length;renderQuiz();};
+ document.getElementById("nextQ").onclick=()=>{quizIndex=(quizIndex+1)%quizData.length;renderQuiz();};
+ startCountdown(15,null,()=>{playSFX("timeout");quizIndex=(quizIndex+1)%quizData.length;renderQuiz();});
+}
+
+/* ---------- CASE CHALLENGE ---------- */
+let caseData=window.dentalCases||[],caseIndex=0,caseScore=getHS(KEY_HS_CASE);
+function startCase(){
+ openPanel();backspaceBtn.style.display="none";caseScore=getHS(KEY_HS_CASE);
+ renderCase();
+}
+function renderCase(){
+ stopTimers();const c=caseData[caseIndex];
+ if(!c){questionEl.textContent="No cases.";contentArea.innerHTML="";return;}
+ questionEl.textContent=c.case;
+ contentArea.innerHTML=`<div class='options'>${c.options.map(o=>`<button class='option-btn'>${o}</button>`).join("")}</div>
+ <div style='text-align:center;margin-top:10px;'>
+   <button class='option-btn' id='prevC'>⬅️ Prev</button>
+   <button class='option-btn' id='nextC'>Next ➡️</button>
+ </div>`;
+ contentArea.querySelectorAll(".option-btn").forEach(b=>{
+  if(b.id)return;
+  b.onclick=()=>{playSFX("click");stopTimers();
+   if(b.textContent.trim().toLowerCase()===c.answer.trim().toLowerCase()){
+     playSFX("correct");caseScore+=10;setHS(KEY_HS_CASE,caseScore);}
+   else playSFX("wrong");
+   scoreDisplay.textContent=caseScore;
+   setTimeout(()=>{caseIndex=(caseIndex+1)%caseData.length;renderCase();},700);
+  };
+ });
+ document.getElementById("prevC").onclick=()=>{caseIndex=(caseIndex-1+caseData.length)%caseData.length;renderCase();};
+ document.getElementById("nextC").onclick=()=>{caseIndex=(caseIndex+1)%caseData.length;renderCase();};
+ startCountdown(15,null,()=>{playSFX("timeout");caseIndex=(caseIndex+1)%caseData.length;renderCase();});
+}
+
+/* ---------- NAVIGATION ---------- */
+document.getElementById("openWordscape").onclick=()=>startWordscape();
+document.getElementById("openQuiz").onclick=()=>startQuiz();
+document.getElementById("openCase").onclick=()=>startCase();
+btnHome.onclick=()=>closePanel();
+function openPanel(){
+ homeEl.style.display="none";gameArea.style.display="flex";
+ setTimeout(()=>gamePanel.classList.add("show"),20);
+ gameArea.setAttribute("aria-hidden","false");
+}
+function closePanel(){
+ gamePanel.classList.remove("show");
+ setTimeout(()=>{gameArea.style.display="none";homeEl.style.display="";
+ contentArea.innerHTML="";questionEl.textContent="Loading...";stopTimers();refreshHS();},300);
+}
+
+/* ---------- BUBBLES BACKGROUND ---------- */
+(function makeBubbles(c=22){
+ const b=document.getElementById("bubbles");
+ for(let i=0;i<c;i++){const d=document.createElement("div");
+  d.className="bubble";const s=12+Math.random()*42;
+  d.style.width=d.style.height=s+"px";d.style.left=Math.random()*100+"vw";
+  d.style.animationDuration=8+Math.random()*9+"s";d.style.opacity=0.5+Math.random()*0.6;
+  b.appendChild(d);}
+})();
+</script>
+</body>
+</html>
