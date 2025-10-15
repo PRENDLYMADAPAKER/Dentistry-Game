@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🦷 Dental Hub Games</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: radial-gradient(circle at center, #00111a, #000);
+      color: #fff;
+      text-align: center;
+      overflow-x: hidden;
+    }
+    h1, h2 { margin-top: 20px; }
+    .btn {
+      background: linear-gradient(45deg, #00e1ff, #007fff);
+      border: none;
+      color: white;
+      padding: 12px 25px;
+      margin: 8px;
+      font-size: 1rem;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .btn:hover {
+      transform: scale(1.1);
+      background: linear-gradient(45deg, #00ffaa, #007fff);
+    }
+    .hidden { display: none; }
+    .game-box {
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      padding: 20px;
+      margin: 30px auto;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 0 20px #00aaff33;
+    }
+    #letters-container button {
+      background: #007fff;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 1.2rem;
+      margin: 5px;
+      transition: 0.2s;
+    }
+    #letters-container button:hover {
+      background: #00e1ff;
+      transform: scale(1.1);
+    }
+    .back-btn { background: #333; font-size: 0.9rem; margin-top: 20px; }
+    #quiz-options button, #case-options button {
+      display: block;
+      width: 90%;
+      margin: 10px auto;
+      background: #007fff;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- HOME MENU -->
+  <section id="home">
+    <h1>🦷 Dental Hub Games</h1>
+    <p>Choose a game to play and test your dental knowledge!</p>
+    <button class="btn" onclick="openSection('wordscape')">🧩 Dental Wordscape</button>
+    <button class="btn" onclick="openSection('quiz')">📘 Dental Quiz Game</button>
+    <button class="btn" onclick="openSection('case')">💬 Dental Case Challenge</button>
+  </section>
+
+  <!-- 🧩 DENTAL WORDSCAPE -->
+  <section id="wordscape" class="hidden">
+    <div class="game-box">
+      <h2>🧩 Dental Wordscape</h2>
+      <div id="word-display" style="margin:15px 0;font-size:1.4rem;letter-spacing:4px;"></div>
+      <div id="letters-container" style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:15px;"></div>
+      <p id="message" style="min-height:20px;margin-bottom:10px;"></p>
+      <p id="score" style="opacity:0.8;">Score: 0</p>
+      <button class="btn back-btn" onclick="goHome()">← Back to Menu</button>
+    </div>
+  </section>
+
+  <!-- 📘 DENTAL QUIZ -->
+  <section id="quiz" class="hidden">
+    <div class="game-box">
+      <h2>📘 Dental Quiz Game</h2>
+      <div id="quiz-question" style="margin:15px 0;font-size:1.2rem;"></div>
+      <div id="quiz-options"></div>
+      <p id="quiz-feedback" style="min-height:20px;"></p>
+      <p id="quiz-score">Score: 0</p>
+      <button class="btn back-btn" onclick="goHome()">← Back to Menu</button>
+    </div>
+  </section>
+
+  <!-- 💬 DENTAL CASE CHALLENGE -->
+  <section id="case" class="hidden">
+    <div class="game-box">
+      <h2>💬 Dental Case Challenge</h2>
+      <div id="case-question" style="margin:15px 0;font-size:1.1rem;"></div>
+      <div id="case-options"></div>
+      <p id="case-feedback" style="min-height:20px;"></p>
+      <p id="case-score">Score: 0</p>
+      <button class="btn back-btn" onclick="goHome()">← Back to Menu</button>
+    </div>
+  </section>
+
+  <script>
+    /* === CONFIG: GITHUB JSON URLs === */
+    const wordURL = "https://raw.githubusercontent.com/PRENDLYMADAPAKER/DentalGameData/refs/heads/main/dental_words.json";
+    const quizURL = "https://raw.githubusercontent.com/PRENDLYMADAPAKER/DentalGameData/refs/heads/main/dental_quiz.json";
+    const caseURL = "https://raw.githubusercontent.com/PRENDLYMADAPAKER/DentalGameData/refs/heads/main/dental_cases.json";
+
+    /* === Navigation === */
+    function openSection(id) {
+      document.querySelectorAll("section").forEach(s => s.classList.add("hidden"));
+      document.getElementById(id).classList.remove("hidden");
+    }
+    function goHome() {
+      document.querySelectorAll("section").forEach(s => s.classList.add("hidden"));
+      document.getElementById("home").classList.remove("hidden");
+    }
+
+    /* === WORDSCAPE === */
+    let dentalWords = [];
+    let currentWord = "";
+    let shuffledLetters = [];
+    let selectedLetters = "";
+    let score = 0;
+    const wordDisplay = document.getElementById("word-display");
+    const lettersContainer = document.getElementById("letters-container");
+    const message = document.getElementById("message");
+    const scoreDisplay = document.getElementById("score");
+
+    async function startWordscape() {
+      try {
+        const res = await fetch(wordURL);
+        dentalWords = await res.json();
+      } catch {
+        dentalWords = ["ENAMEL","CROWN","MOLAR"];
+      }
+      score = 0;
+      nextWord();
+    }
+
+    function nextWord() {
+      currentWord = dentalWords[Math.floor(Math.random() * dentalWords.length)].toUpperCase();
+      shuffledLetters = shuffleArray(currentWord.split(""));
+      selectedLetters = "";
+      renderLetters();
+      wordDisplay.textContent = "_ ".repeat(currentWord.length);
+      message.textContent = "";
+    }
+
+    function shuffleArray(a){return a.sort(()=>Math.random()-0.5);}
+    function renderLetters(){
+      lettersContainer.innerHTML="";
+      shuffledLetters.forEach((l,i)=>{
+        const btn=document.createElement("button");
+        btn.textContent=l;
+        btn.onclick=()=>selectLetter(i);
+        lettersContainer.appendChild(btn);
+      });
+    }
+    function selectLetter(i){
+      const l=shuffledLetters[i];
+      selectedLetters+=l;
+      shuffledLetters[i]="";
+      renderLetters();
+      wordDisplay.textContent=selectedLetters;
+      if(selectedLetters.length===currentWord.length)checkWord();
+    }
+    function checkWord(){
+      if(selectedLetters===currentWord){
+        message.textContent="✅ Correct! "+currentWord;
+        message.style.color="#00ffb3";
+        score+=10;
+        scoreDisplay.textContent="Score: "+score;
+        setTimeout(nextWord,1200);
+      }else{
+        message.textContent="❌ Incorrect!";
+        message.style.color="#ff6b6b";
+        setTimeout(nextWord,1500);
+      }
+    }
+
+    const wordObserver=new MutationObserver(()=>{
+      const visible=!document.getElementById("wordscape").classList.contains("hidden");
+      if(visible)startWordscape();
+    });
+    wordObserver.observe(document.getElementById("wordscape"),{attributes:true,attributeFilter:["class"]});
+
+    /* === QUIZ GAME === */
+    let quizData=[], quizIndex=0, quizScore=0;
+    const quizQuestion=document.getElementById("quiz-question");
+    const quizOptions=document.getElementById("quiz-options");
+    const quizFeedback=document.getElementById("quiz-feedback");
+    const quizScoreDisplay=document.getElementById("quiz-score");
+
+    async function startQuiz(){
+      try{
+        const res=await fetch(quizURL);
+        quizData=await res.json();
+      }catch{
+        quizData=[{question:"Fallback: Hardest substance?",options:["Bone","Enamel"],answer:"Enamel"}];
+      }
+      quizIndex=0; quizScore=0; loadQuiz();
+    }
+
+    function loadQuiz(){
+      const q=quizData[quizIndex];
+      quizQuestion.textContent=q.question;
+      quizOptions.innerHTML="";
+      q.options.forEach(opt=>{
+        const btn=document.createElement("button");
+        btn.className="btn";
+        btn.textContent=opt;
+        btn.onclick=()=>checkAnswer(opt);
+        quizOptions.appendChild(btn);
+      });
+      quizFeedback.textContent="";
+    }
+
+    function checkAnswer(selected){
+      const correct=quizData[quizIndex].answer;
+      if(selected===correct){
+        quizFeedback.textContent="✅ Correct!";
+        quizFeedback.style.color="#00ffb3";
+        quizScore+=10;
+      }else{
+        quizFeedback.textContent="❌ Correct: "+correct;
+        quizFeedback.style.color="#ff6b6b";
+      }
+      quizScoreDisplay.textContent="Score: "+quizScore;
+      quizIndex++;
+      setTimeout(()=>{
+        if(quizIndex<quizData.length)loadQuiz();
+        else quizFeedback.textContent="🏆 Quiz Completed! Final Score: "+quizScore;
+      },1200);
+    }
+
+    const quizObserver=new MutationObserver(()=>{
+      const visible=!document.getElementById("quiz").classList.contains("hidden");
+      if(visible)startQuiz();
+    });
+    quizObserver.observe(document.getElementById("quiz"),{attributes:true,attributeFilter:["class"]});
+
+    /* === CASE CHALLENGE === */
+    let caseData=[], caseIndex=0, caseScore=0;
+    const caseQuestion=document.getElementById("case-question");
+    const caseOptions=document.getElementById("case-options");
+    const caseFeedback=document.getElementById("case-feedback");
+    const caseScoreDisplay=document.getElementById("case-score");
+
+    async function startCaseChallenge(){
+      try{
+        const res=await fetch(caseURL);
+        caseData=await res.json();
+      }catch{
+        caseData=[{case:"Fallback Case: Tooth pain?",options:["Pulpitis","Gingivitis"],answer:"Pulpitis"}];
+      }
+      caseIndex=0; caseScore=0; loadCase();
+    }
+
+    function loadCase(){
+      const c=caseData[caseIndex];
+      caseQuestion.textContent=c.case;
+      caseOptions.innerHTML="";
+      c.options.forEach(opt=>{
+        const btn=document.createElement("button");
+        btn.className="btn";
+        btn.textContent=opt;
+        btn.onclick=()=>checkCase(opt);
+        caseOptions.appendChild(btn);
+      });
+      caseFeedback.textContent="";
+    }
+
+    function checkCase(selected){
+      const correct=caseData[caseIndex].answer;
+      if(selected===correct){
+        caseFeedback.textContent="✅ Correct!";
+        caseFeedback.style.color="#00ffb3";
+        caseScore+=10;
+      }else{
+        caseFeedback.textContent="❌ Correct: "+correct;
+        caseFeedback.style.color="#ff6b6b";
+      }
+      caseScoreDisplay.textContent="Score: "+caseScore;
+      caseIndex++;
+      setTimeout(()=>{
+        if(caseIndex<caseData.length)loadCase();
+        else caseFeedback.textContent="🏆 Challenge Completed! Final Score: "+caseScore;
+      },1200);
+    }
+
+    const caseObserver=new MutationObserver(()=>{
+      const visible=!document.getElementById("case").classList.contains("hidden");
+      if(visible)startCaseChallenge();
+    });
+    caseObserver.observe(document.getElementById("case"),{attributes:true,attributeFilter:["class"]});
+  </script>
+</body>
+  </html>
