@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Dental Hub — Scale+Fade Transition 🦷</title>
+
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --accent:#1eaedb; --accent-2:#3aa0ff; --muted:#6b7280; --text:#04202a;
+      --glass-blur:12px; --card-shadow:0 14px 50px rgba(16,24,40,0.06);
+      --success:#0b8f6b; --danger:#b73636; --timer-gradient:linear-gradient(90deg,#1eaedb,#3aa0ff);
+      --overlay-bg: rgba(255,255,255,0.98);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:'Inter',system-ui,-apple-system,"Segoe UI",Roboto,Arial;
+      color:var(--text); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+      display:flex; align-items:center; justify-content:center; padding:20px;
+      background: linear-gradient(130deg, rgba(243,249,255,0.85), rgba(247,250,255,0.9));
+      overflow:auto;
+    }
+
+    /* animated background blobs */
+    body::before, body::after{
+      content:""; position:fixed; inset:-20%; z-index:-2; filter:blur(80px); pointer-events:none;
+    }
+    body::before{ background: radial-gradient(circle at 10% 20%, rgba(46,199,255,0.14), transparent 10%), radial-gradient(circle at 80% 80%, rgba(147,196,255,0.12), transparent 10%); animation:floatA 18s ease-in-out infinite; }
+    body::after{ background: radial-gradient(circle at 60% 10%, rgba(255,240,220,0.08), transparent 15%), radial-gradient(circle at 20% 85%, rgba(220,245,255,0.06), transparent 15%); animation:floatB 22s ease-in-out infinite; }
+    @keyframes floatA { 0%{transform:translate(-3%,-2%)}50%{transform:translate(3%,2%)}100%{transform:translate(-3%,-2%)} }
+    @keyframes floatB { 0%{transform:translate(4%,-1%)}50%{transform:translate(-4%,1%)}100%{transform:translate(4%,-1%)} }
+
+    /* layout */
+    .scene { width:100%; max-width:1100px; display:grid; grid-template-columns: 360px 1fr; gap:24px; align-items:start; }
+    @media (max-width:1000px){ .scene{ grid-template-columns: 1fr; max-width:680px } }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.78), rgba(250,250,255,0.66));
+      border-radius:14px; padding:18px; border:1px solid rgba(255,255,255,0.6);
+      backdrop-filter: blur(var(--glass-blur)); box-shadow:var(--card-shadow);
+      height: calc(100vh - 40px); overflow:auto;
+    }
+
+    .brand{ display:flex; align-items:center; gap:12px; }
+    .logo{ width:56px;height:56px;border-radius:12px; background:linear-gradient(135deg,var(--accent),var(--accent-2)); display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px; box-shadow:0 8px 24px rgba(30,174,219,0.18); }
+    .title{ font-size:20px; font-weight:700; color:var(--text); }
+    .subtitle{ font-size:13px; color:var(--muted); margin-top:4px; }
+
+    .menu{ margin-top:18px; display:flex; flex-direction:column; gap:12px; }
+    .menu button{
+      background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(255,255,255,0.86));
+      border-radius:12px; padding:14px 16px; border:1px solid rgba(10,20,30,0.04);
+      display:flex; align-items:center; justify-content:space-between; cursor:pointer; font-weight:700; color:var(--text);
+      transition: transform .18s cubic-bezier(.2,.9,.3,1), box-shadow .18s;
+      box-shadow: 0 6px 20px rgba(16,24,40,0.05); position:relative; overflow:hidden;
+    }
+    .menu button:hover{ transform:translateY(-6px); box-shadow:0 22px 48px rgba(16,24,40,0.08); }
+
+    .emoji{ font-size:18px; width:34px; text-align:center; }
+    .small{ font-size:13px; color:var(--muted); margin-top:10px; }
+
+    /* ripple */
+    .ripple { position:absolute; border-radius:50%; transform:scale(0); animation:ripple .6s linear; background: rgba(30,174,219,0.14); pointer-events:none; }
+    @keyframes ripple { to { transform:scale(4); opacity:0; } }
+
+    /* main preview cards */
+    .main { display:flex; flex-direction:column; gap:18px; max-height: calc(100vh - 40px); overflow:auto; }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(250,250,255,0.82));
+      border-radius:14px; padding:18px; border:1px solid rgba(255,255,255,0.7);
+      backdrop-filter: blur(var(--glass-blur)); box-shadow:var(--card-shadow); min-height:140px;
+    }
+
+    .game-header { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .game-title{ font-weight:800; font-size:18px; }
+    .game-sub{ color:var(--muted); font-size:13px; }
+
+    /* overlay + panel (scale+fade) */
+    .overlay {
+      position:fixed; inset:0; z-index:80; display:flex; align-items:flex-start; justify-content:center;
+      background: rgba(0,0,0,0.08); pointer-events:none; transition: background .28s ease;
+    }
+    .overlay.show { pointer-events:auto; background: rgba(0,0,0,0.18); }
+    .overlay-panel {
+      margin-top:32px; width: min(920px, calc(100% - 48px)); max-height: calc(100vh - 64px);
+      background: var(--overlay-bg); border-radius:14px; box-shadow:0 30px 80px rgba(10,20,30,0.12);
+      border:1px solid rgba(0,0,0,0.04);
+      transform: scale(0.96); opacity:0; transition: transform .36s cubic-bezier(.2,.9,.3,1), opacity .28s ease;
+      overflow:auto; pointer-events:auto;
+    }
+    .overlay.show .overlay-panel { transform: scale(1); opacity:1; }
+
+    /* overlay top bar inside panel */
+    .overlay-topbar {
+      display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; border-bottom:1px solid rgba(0,0,0,0.03);
+      position:sticky; top:0; background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.96)); z-index:5;
+    }
+    .top-left { display:flex; align-items:center; gap:12px; }
+    .top-right { display:flex; align-items:center; gap:10px; }
+
+    .score-pill { background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:white; padding:8px 12px; border-radius:999px; font-weight:800; display:inline-flex; align-items:center; gap:8px; font-size:14px; }
+
+    .timer-pill { background:white; border-radius:999px; padding:6px 10px; border:1px solid rgba(7,17,27,0.05); font-weight:700; display:flex; align-items:center; gap:8px; min-width:72px; justify-content:center; }
+    .home-btn {
+      width:44px; height:44px; border-radius:10px; border:1px solid rgba(7,17,27,0.04);
+      background:rgba(255,255,255,0.95); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 10px 26px rgba(16,24,40,0.06);
+    }
+
+    /* game body */
+    .game-body { padding:18px; }
+
+    /* Wordscape */
+    #word-display { font-size:26px; letter-spacing:8px; font-weight:700; padding:12px 18px; border-radius:12px; background:linear-gradient(90deg, rgba(30,174,219,0.06), rgba(58,160,255,0.04)); text-align:center; }
+    #letters{ display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; justify-content:center; }
+    #letters button{ width:60px; height:60px; border-radius:12px; border:none; background:white; box-shadow:0 10px 26px rgba(16,24,40,0.06); font-weight:800; cursor:pointer; }
+
+    /* options */
+    .options{ display:flex; flex-direction:column; gap:10px; margin-top:12px; max-height:60vh; overflow:auto; padding-right:6px; }
+    .option-btn{ padding:14px 16px; border-radius:10px; border:1px solid rgba(7,17,27,0.03); background:white; font-weight:800; cursor:pointer; box-shadow:0 10px 30px rgba(16,24,40,0.05); }
+    .option-btn:disabled{ opacity:.5; cursor:default; }
+
+    .timer-wrap{ width:120px; height:8px; background:rgba(10,20,30,0.04); border-radius:999px; overflow:hidden; }
+    .timer-bar{ height:100%; width:100%; background:var(--timer-gradient); transition: width .12s linear; transform-origin:left; }
+
+    @media (max-width:720px){
+      .overlay-panel{ width: calc(100% - 32px); margin-top:18px; max-height: calc(100vh - 36px); }
+      .scene{ gap:12px; padding:0 6px; }
+      .panel{ height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="scene" aria-live="polite">
+    <!-- Left menu panel -->
+    <aside class="panel" aria-label="Game menu">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="brand">
+          <div class="logo">DH</div>
+          <div>
+            <div class="title">Dental Hub</div>
+            <div class="subtitle">Learn • Diagnose • Practice</div>
+          </div>
+        </div>
+
+        <div style="margin-left:auto; display:flex; gap:8px;">
+          <div class="controls">
+            <button id="muteBtn" class="home-btn" title="Mute / Unmute" aria-pressed="false" onclick="toggleMute()">
+              <svg id="muteIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11 5L6 9H2v6h4l5 4V5z" fill="#06202b"/>
+                <path d="M19 8l-1.41 1.41L20.17 12l-2.58 2.59L19 16l3-3-3-5z" fill="#7a8a94"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu" role="navigation">
+        <button onclick="ripple(this,event); openGameOverlay('wordscape'); playTone('click')">
+          <span class="label"><span class="emoji">🧩</span> Dental Wordscape</span>
+          <span style="font-size:13px;color:var(--muted)">Connect letters • Vocabulary</span>
+        </button>
+
+        <button onclick="ripple(this,event); openGameOverlay('quiz'); playTone('click')">
+          <span class="label"><span class="emoji">📘</span> Dental Quiz Game</span>
+          <span style="font-size:13px;color:var(--muted)">Multiple choice • Timed</span>
+        </button>
+
+        <button onclick="ripple(this,event); openGameOverlay('case'); playTone('click')">
+          <span class="label"><span class="emoji">💬</span> Case Challenge</span>
+          <span style="font-size:13px;color:var(--muted)">Clinical scenarios</span>
+        </button>
+      </div>
+
+      <div class="small">Data source: <strong>GitHub JSON</strong> — edit files to update content.</div>
+      <div class="small" style="margin-top:8px">High scores stored locally in your browser.</div>
+    </aside>
+
+    <!-- Right preview column -->
+    <main class="main">
+      <section class="card">
+        <div class="game-header">
+          <div><div class="game-title">🧩 Dental Wordscape</div><div class="game-sub">Tap to open full Wordscape</div></div>
+          <div class="game-sub" id="word-high">🏆 High Score: 0</div>
+        </div>
+        <div style="margin-top:12px;">
+          <div style="font-weight:700;color:var(--muted)">Practice vocabulary</div>
+          <div style="margin-top:12px;"><button class="option-btn" onclick="openGameOverlay('wordscape'); playTone('click')">Open Wordscape</button></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="game-header">
+          <div><div class="game-title">📘 Dental Quiz</div><div class="game-sub">15s per question</div></div>
+          <div class="game-sub" id="quiz-high">🏆 High Score: 0</div>
+        </div>
+        <div style="margin-top:12px;">
+          <div style="font-weight:700;color:var(--muted)">Timed quiz with auto-next</div>
+          <div style="margin-top:12px;"><button class="option-btn" onclick="openGameOverlay('quiz'); playTone('click')">Open Quiz</button></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="game-header">
+          <div><div class="game-title">💬 Case Challenge</div><div class="game-sub">Clinical scenarios</div></div>
+          <div class="game-sub" id="case-high">🏆 High Score: 0</div>
+        </div>
+        <div style="margin-top:12px;">
+          <div style="font-weight:700;color:var(--muted)">Practice diagnostics</div>
+          <div style="margin-top:12px;"><button class="option-btn" onclick="openGameOverlay('case'); playTone('click')">Open Case Challenge</button></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Overlay panel -->
+  <div id="overlay" class="overlay" aria-hidden="true" style="display:none;">
+    <div id="overlayPanel" class="overlay-panel" role="dialog" aria-modal="true">
+      <!-- topbar will be injected -->
+      <div id="overlayInner"></div>
+    </div>
+  </div>
+
+  <script>
+    /* -------------------------
+       Your GitHub raw JSON URLs
+       ------------------------- */
+    const WORD_URL = "https://raw.githubusercontent.com/PRENDLYMADAPAKER/DentalGameData/refs/heads/main/dental_words.json";
+    const QUIZ_URL  = "https://raw.githubusercontent.com/PRENDLYMADAPAKER/DentalGameData/refs/heads/main/dental_quiz.json";
+    const CASE_URL  = "https://raw.githubusercontent.com/PRENDLYMADAPAKER/DentalGameData/refs/heads/main/dental_cases.json";
+
+    /* -------------------------
+       Audio (WebAudio) */
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = AudioCtx ? new AudioCtx() : null;
+    let muted = false;
+    function toggleMute(){
+      muted = !muted;
+      document.getElementById('muteBtn').setAttribute('aria-pressed', String(muted));
+      if(!audioCtx) return;
+      if(!muted && audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
+    }
+    function playTone(name){
+      if(muted || !audioCtx) return;
+      const now = audioCtx.currentTime;
+      if(name === 'click'){ const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='sine'; o.frequency.setValueAtTime(1200,now); g.gain.setValueAtTime(0.0001,now); g.gain.exponentialRampToValueAtTime(0.06,now+0.01); g.gain.exponentialRampToValueAtTime(0.0001,now+0.12); o.connect(g); g.connect(audioCtx.destination); o.start(now); o.stop(now+0.14); }
+      else if(name === 'correct'){ [880,1320,1760].forEach((f,i)=>{ const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='sine'; o.frequency.setValueAtTime(f,now+i*0.01); g.gain.setValueAtTime(0.0001,now); g.gain.exponentialRampToValueAtTime(0.08,now+0.02); g.gain.exponentialRampToValueAtTime(0.0001,now+0.28); o.connect(g); g.connect(audioCtx.destination); o.start(now+i*0.01); o.stop(now+0.32); }); }
+      else if(name === 'wrong'){ const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='square'; o.frequency.setValueAtTime(220,now); g.gain.setValueAtTime(0.0001,now); g.gain.exponentialRampToValueAtTime(0.08,now+0.02); g.gain.exponentialRampToValueAtTime(0.0001,now+0.16); o.connect(g); g.connect(audioCtx.destination); o.start(now); o.stop(now+0.18); }
+      else if(name === 'win'){ [440,660,880,1320].forEach((f,i)=>{ const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='sine'; o.frequency.setValueAtTime(f,now+i*0.08); g.gain.setValueAtTime(0.0001,now+i*0.08); g.gain.exponentialRampToValueAtTime(0.09,now+i*0.08+0.02); g.gain.exponentialRampToValueAtTime(0.0001,now+i*0.08+0.28); o.connect(g); g.connect(audioCtx.destination); o.start(now+i*0.08); o.stop(now+i*0.08+0.34); }); }
+    }
+
+    /* -------------------------
+       Ripple helper */
+    function ripple(el, evt){
+      const r = document.createElement('span'); r.className='ripple';
+      const rect = el.getBoundingClientRect(); const size = Math.max(rect.width, rect.height);
+      r.style.width = r.style.height = size + 'px';
+      const cx = (evt && evt.clientX) ? (evt.clientX - rect.left - size/2) : (rect.width/2 - size/2);
+      const cy = (evt && evt.clientY) ? (evt.clientY - rect.top - size/2) : (rect.height/2 - size/2);
+      r.style.left = cx + 'px'; r.style.top = cy + 'px';
+      el.appendChild(r); setTimeout(()=> r.remove(), 600);
+    }
+
+    /* -------------------------
+       High score keys & helpers */
+    const KEY_WORD_HS = 'wordscapeHighScore_v1';
+    const KEY_QUIZ_HS = 'quizHighScore_v1';
+    const KEY_CASE_HS = 'caseHighScore_v1';
+    function getHS(k){ return Number(localStorage.getItem(k) || 0); }
+    function setHS(k,v){ localStorage.setItem(k, String(v)); }
+    function updatePreviewHighs(){
+      document.getElementById('word-high').textContent = '🏆 High Score: ' + getHS(KEY_WORD_HS);
+      document.getElementById('quiz-high').textContent = '🏆 High Score: ' + getHS(KEY_QUIZ_HS);
+      document.getElementById('case-high').textContent = '🏆 High Score: ' + getHS(KEY_CASE_HS);
+    }
+
+    /* -------------------------
+       Overlay control (scale+fade)
+       ------------------------- */
+    const overlay = document.getElementById('overlay');
+    const overlayPanel = document.getElementById('overlayPanel');
+    const overlayInner = document.getElementById('overlayInner');
+    let currentMode = null;
+
+    function openGameOverlay(mode){
+      currentMode = mode;
+      overlay.style.display = 'flex';
+      // tick then show
+      setTimeout(()=> overlay.classList.add('show'), 20);
+      // prevent body scrolling while overlay open
+      document.body.style.overflow = 'hidden';
+      // render content
+      if(mode === 'wordscape') renderWordscapeOverlay();
+      if(mode === 'quiz') renderQuizOverlay();
+      if(mode === 'case') renderCaseOverlay();
+      updatePreviewHighs();
+      playTone('click');
+    }
+
+    function closeOverlay(){
+      overlay.classList.remove('show');
+      // restore scroll after animation
+      setTimeout(()=> {
+        overlay.style.display = 'none';
+        overlayInner.innerHTML = '';
+        document.body.style.overflow = 'auto';
+        currentMode = null;
+        updatePreviewHighs();
+      }, 380);
+      playTone('click');
+    }
+
+    // Esc to close
+    window.addEventListener('keydown', (e)=> { if(e.key === 'Escape' && overlay.classList.contains('show')) closeOverlay(); });
+
+    /* ===========================
+       WORDSCAPE overlay
+       =========================== */
+    let words = [];
+    const fallbackWords = ["ENAMEL","CROWN","MOLAR","PLAQUE","DENTIN","PULP","CARIES","GINGIVA"];
+    let wsCurrent = '', wsShuffled = [], wsSelected = '', wsScore = 0;
+
+    function resetWordscapeState(){
+      wsCurrent=''; wsShuffled=[]; wsSelected=''; wsScore=0;
+    }
+
+    async function renderWordscapeOverlay(){
+      overlayInner.innerHTML = `
+        <div class="overlay-topbar">
+          <div class="top-left"><div style="font-weight:800">🧩 Dental Wordscape</div><div style="color:var(--muted);font-size:13px;margin-left:12px">Form dental terms</div></div>
+          <div class="top-right">
+            <div class="score-pill" id="ws_scorepill">0</div>
+            <div class="timer-pill" id="ws_timerpill" style="display:none"></div>
+            <button class="home-btn" title="Home" onclick="closeOverlay()">🏠</button>
+          </div>
+        </div>
+        <div class="game-body">
+          <div id="ws_display" style="font-weight:800; font-size:24px; letter-spacing:6px; margin-bottom:10px">— — —</div>
+          <div id="letters"></div>
+          <div style="margin-top:12px"><div id="ws_msg" class="feedback"></div></div>
+        </div>
+      `;
+
+      // fetch words once
+      if(words.length === 0){
+        try{
+          const r = await fetch(WORD_URL);
+          const data = await r.json();
+          if(Array.isArray(data) && data.length) words = data.map(s=>String(s).toUpperCase());
+        }catch(e){
+          console.warn('words fetch failed, using fallback', e);
+          words = fallbackWords.slice();
+        }
+      }
+
+      wsScore = 0; document.getElementById('ws_scorepill').textContent = wsScore;
+      nextWSWord();
+    }
+
+    function nextWSWord(){
+      if(!words.length) return;
+      wsCurrent = String(words[Math.floor(Math.random()*words.length)] || '').toUpperCase().replace(/[^A-Z]/g,'');
+      if(!wsCurrent){ nextWSWord(); return; }
+      wsShuffled = shuffle(wsCurrent.split(''));
+      wsSelected = '';
+      renderWSLetters();
+      document.getElementById('ws_display').textContent = Array.from({length: wsCurrent.length}).map(()=> '•').join(' ');
+      document.getElementById('ws_msg').textContent = '';
+    }
+
+     function renderWSLetters(){
+      const container = document.getElementById('letters');
+      container.innerHTML = '';
+      wsShuffled.forEach((ch, i) => {
+        const b = document.createElement('button');
+        b.textContent = ch || '';
+        b.disabled = ch === '';
+        b.style.width='60px'; b.style.height='60px'; b.style.borderRadius='12px'; b.style.margin='6px';
+        b.onclick = (ev)=> {
+          ripple(b, ev); if(b.disabled) return; playTone('click');
+          wsSelected += ch; wsShuffled[i] = ''; renderWSLetters();
+          document.getElementById('ws_display').textContent = wsSelected.split('').join(' ');
+          if(wsSelected.length === wsCurrent.length) setTimeout(checkWSWord, 160);
+        };
+        container.appendChild(b);
+      });
+    }
+
+    function checkWSWord(){
+      const msg = document.getElementById('ws_msg');
+      if(wsSelected === wsCurrent){
+        msg.textContent = 'Correct — ' + wsCurrent; msg.style.color = 'var(--success)';
+        playTone('correct'); wsScore += 10; document.getElementById('ws_scorepill').textContent = wsScore;
+        const prev = getHS(KEY_WORD_HS); if(wsScore > prev){ setHS(KEY_WORD_HS, wsScore); updatePreviewHighs(); }
+        setTimeout(nextWSWord, 700);
+      } else {
+        msg.textContent = 'Incorrect — try another word'; msg.style.color = 'var(--danger)'; playTone('wrong');
+        setTimeout(nextWSWord, 900);
+      }
+    }
+
+    /* ===========================
+       QUIZ overlay (15s timer shown beside score)
+       =========================== */
+    let quizItems = []; const fallbackQuiz = [{question:"Which tissue covers the crown of a tooth?", options:["Cementum","Dentin","Enamel","Pulp"], answer:"Enamel"}];
+    let qIndex = 0, qScore = 0, quizTimer = null, timerSeconds = 15, timerRemaining = 15;
+
+    function resetQuizState(){ if(quizTimer){ clearInterval(quizTimer); quizTimer=null; } quizItems=[]; qIndex=0; qScore=0; }
+
+    async function renderQuizOverlay(){
+      overlayInner.innerHTML = `
+        <div class="overlay-topbar">
+          <div class="top-left"><div style="font-weight:800">📘 Dental Quiz</div><div style="color:var(--muted);font-size:13px;margin-left:12px">15s per question</div></div>
+          <div class="top-right">
+            <div class="score-pill" id="quiz_scorepill">0</div>
+            <div class="timer-pill" id="quiz_timerpill"><div style="font-weight:800" id="quiz_timer_text">15s</div></div>
+            <button class="home-btn" title="Home" onclick="closeOverlay()">🏠</button>
+          </div>
+        </div>
+        <div class="game-body">
+          <div id="quiz_question" style="font-weight:800;font-size:18px">Loading...</div>
+          <div class="timer-wrap" style="margin-top:10px"><div id="quiz_timerbar" class="timer-bar" style="width:100%"></div></div>
+          <div class="options" id="quiz_options"></div>
+          <div style="margin-top:10px"><div id="quiz_msg" class="feedback"></div></div>
+        </div>
+      `;
+
+      // fetch quiz
+      try{
+        const r = await fetch(QUIZ_URL);
+        const data = await r.json();
+        if(Array.isArray(data) && data.length) quizItems = data;
+      } catch(e){
+        console.warn('quiz fetch failed', e);
+        quizItems = fallbackQuiz.slice();
+      }
+      qIndex = 0; qScore = 0; document.getElementById('quiz_scorepill').textContent = qScore;
+      renderQuizQuestion();
+    }
+
+    function startQuizTimer(){
+      stopQuizTimer();
+      timerRemaining = timerSeconds;
+      const bar = document.getElementById('quiz_timerbar');
+      const text = document.getElementById('quiz_timer_text');
+      bar.style.width = '100%';
+      text.textContent = Math.ceil(timerRemaining) + 's';
+      const step = 100;
+      quizTimer = setInterval(()=> {
+        timerRemaining -= step/1000;
+        const pct = Math.max(0, timerRemaining / timerSeconds);
+        bar.style.width = (pct*100) + '%';
+        text.textContent = Math.max(0, Math.ceil(timerRemaining)) + 's';
+        if(timerRemaining <= 0){
+          stopQuizTimer();
+          handleQuizTimeout();
+        }
+      }, step);
+    }
+    function stopQuizTimer(){ if(quizTimer){ clearInterval(quizTimer); quizTimer=null; } }
+
+    function renderQuizQuestion(){
+      if(!quizItems.length) return;
+      if(qIndex >= quizItems.length){
+        document.getElementById('quiz_question').textContent = 'Quiz complete 🎉';
+        document.getElementById('quiz_options').innerHTML = `<div style="padding:8px;color:var(--muted)">Final score: ${qScore}</div>`;
+        playTone('win');
+        const prev = getHS(KEY_QUIZ_HS); if(qScore > prev){ setHS(KEY_QUIZ_HS, qScore); updatePreviewHighs(); }
+        stopQuizTimer(); return;
+      }
+      const cur = quizItems[qIndex];
+      document.getElementById('quiz_question').textContent = cur.question;
+      const opts = document.getElementById('quiz_options'); opts.innerHTML = ''; document.getElementById('quiz_msg').textContent='';
+      document.getElementById('quiz_scorepill').textContent = qScore;
+      const shuffled = shuffle(cur.options.map(o=>String(o)));
+      shuffled.forEach(opt => {
+        const b = document.createElement('button'); b.className='option-btn'; b.textContent = opt;
+        b.onclick = (ev) => {
+          // disable all
+          document.querySelectorAll('#quiz_options .option-btn').forEach(x=>x.disabled=true);
+          stopQuizTimer();
+          if(opt === cur.answer){ document.getElementById('quiz_msg').textContent = 'Correct!'; document.getElementById('quiz_msg').style.color = 'var(--success)'; playTone('correct'); qScore+=10; document.getElementById('quiz_scorepill').textContent = qScore; }
+          else { document.getElementById('quiz_msg').textContent = `Incorrect — answer: ${cur.answer}`; document.getElementById('quiz_msg').style.color = 'var(--danger)'; playTone('wrong'); }
+          setTimeout(()=>{ qIndex++; renderQuizQuestion(); startQuizTimer(); }, 900);
+        };
+        b.addEventListener('click', (ev)=> ripple(b, ev));
+        opts.appendChild(b);
+      });
+      // ensure visible
+      opts.scrollTop = 0;
+      // start timer
+      startQuizTimer();
+    }
+
+    function handleQuizTimeout(){
+      const cur = quizItems[qIndex];
+      document.querySelectorAll('#quiz_options .option-btn').forEach(x=>x.disabled=true);
+      document.getElementById('quiz_msg').textContent = `Time's up — answer: ${cur.answer}`; document.getElementById('quiz_msg').style.color = 'var(--danger)';
+      playTone('wrong');
+      setTimeout(()=>{ qIndex++; renderQuizQuestion(); }, 900);
+    }
+
+    /* ===========================
+       CASE overlay
+       =========================== */
+    let cases = []; const fallbackCases = [{case:"25-year-old with pain on biting localized to one molar with a large cavity. Most likely?", options:["Gingivitis","Pulpitis","Periodontitis","Pericoronitis"], answer:"Pulpitis"}];
+    let caseIndex = 0, caseScore = 0;
+
+    async function renderCaseOverlay(){
+      overlayInner.innerHTML = `
+        <div class="overlay-topbar">
+          <div class="top-left"><div style="font-weight:800">💬 Case Challenge</div><div style="color:var(--muted);font-size:13px;margin-left:12px">Clinical scenarios</div></div>
+          <div class="top-right">
+            <div class="score-pill" id="case_scorepill">0</div>
+            <div class="timer-pill" id="case_timerpill" style="display:none"></div>
+            <button class="home-btn" title="Home" onclick="closeOverlay()">🏠</button>
+          </div>
+        </div>
+        <div class="game-body">
+          <div id="case_stem" style="font-weight:800;font-size:16px">Loading cases...</div>
+          <div class="options" id="case_options"></div>
+          <div style="margin-top:10px"><div id="case_msg" class="feedback"></div></div>
+        </div>
+      `;
+
+      try{
+        const r = await fetch(CASE_URL);
+        const data = await r.json();
+        if(Array.isArray(data) && data.length) cases = data;
+      } catch(e){ console.warn('cases fetch failed', e); cases = fallbackCases.slice(); }
+
+      caseIndex = 0; caseScore = 0; document.getElementById('case_scorepill').textContent = caseScore;
+      renderCaseItem();
+    }
+
+    function renderCaseItem(){
+      if(!cases.length) return;
+      if(caseIndex >= cases.length){
+        document.getElementById('case_stem').textContent = 'All cases completed 🎉';
+        document.getElementById('case_options').innerHTML = `<div style="padding:8px;color:var(--muted)">Final score: ${caseScore}</div>`;
+        playTone('win');
+        const prev = getHS(KEY_CASE_HS); if(caseScore > prev){ setHS(KEY_CASE_HS, caseScore); updatePreviewHighs(); }
+        return;
+      }
+      const cur = cases[caseIndex];
+      document.getElementById('case_stem').textContent = cur.case;
+      const opts = document.getElementById('case_options'); opts.innerHTML=''; document.getElementById('case_msg').textContent='';
+      const sh = shuffle(cur.options.map(o=>String(o)));
+      sh.forEach(opt => {
+        const b = document.createElement('button'); b.className='option-btn'; b.textContent = opt;
+        b.onclick = (ev) => {
+          document.querySelectorAll('#case_options .option-btn').forEach(x => x.disabled=true);
+          ripple(b, ev); if(opt === cur.answer){ document.getElementById('case_msg').textContent = 'Correct!'; document.getElementById('case_msg').style.color='var(--success)'; playTone('correct'); caseScore += 10; document.getElementById('case_scorepill').textContent = caseScore; }
+          else { document.getElementById('case_msg').textContent = `Incorrect — answer: ${cur.answer}`; document.getElementById('case_msg').style.color='var(--danger)'; playTone('wrong'); }
+          setTimeout(()=>{ caseIndex++; renderCaseItem(); }, 900);
+        };
+        opts.appendChild(b);
+      });
+      opts.scrollTop = 0;
+    }
+
+    /* --------------------------
+       small utils & init
+       -------------------------- */
+    function shuffle(arr){ return arr.slice().sort(()=>Math.random()-0.5); }
+    updatePreviewHighs();
+    // resume audio on first pointer
+    window.addEventListener('pointerdown', ()=> { if(audioCtx && audioCtx.state === 'suspended' && !muted) audioCtx.resume().catch(()=>{}); }, { once:true });
+  </script>
+</body>
+</html>
