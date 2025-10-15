@@ -177,7 +177,9 @@ refreshHS();
 /* ---------- WORDSCAPE ---------- */
 let wordList=window.dentalWords||["ENAMEL","CROWN","MOLAR"],currentWord="",shuffled=[],sel=[],wsScore=0;
 function startWordscape(){
-  wordList=window.dentalWords.map(w=>w.toUpperCase());
+  wordList = window.dentalWords.map(w => 
+  (typeof w === "string" ? w : w.word).toUpperCase()
+);
   openPanel();backspaceBtn.style.display="inline-block";
   wsScore=getHS(KEY_HS_WORD);scoreDisplay.textContent=wsScore;
   nextWord();
