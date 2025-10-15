@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dental Hub — Elegant Edition 🦷</title>
+
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --accent: #1eaedb;
+      --accent-2: #3aa0ff;
+      --muted: #6b7280;
+      --card-shadow: 0 10px 40px rgba(16,24,40,0.06);
+      --glass-blur: 12px;
+      --text: #04202a;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:'Inter',system-ui,-apple-system,"Segoe UI",Roboto,Arial;
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:28px;
+      background: linear-gradient(130deg, rgba(243,249,255,0.85), rgba(247,250,255,0.9));
+      overflow:auto;
+    }
+
+    /* Animated background layers */
+    body::before, body::after {
+      content: "";
+      position: fixed;
+      inset: -20%;
+      z-index: -2;
+      filter: blur(80px);
+      opacity: 0.95;
+      transform: translateZ(0);
+      will-change: transform;
+      pointer-events: none;
+    }
+    body::before {
+      background: radial-gradient(circle at 10% 20%, rgba(46,199,255,0.14), transparent 10%),
+                  radial-gradient(circle at 80% 80%, rgba(147,196,255,0.12), transparent 10%);
+      animation: floatA 18s ease-in-out infinite;
+    }
+    body::after {
+      background: radial-gradient(circle at 60% 10%, rgba(255,240,220,0.08), transparent 15%),
+                  radial-gradient(circle at 20% 85%, rgba(220,245,255,0.06), transparent 15%);
+      animation: floatB 22s ease-in-out infinite;
+    }
+    @keyframes floatA {
+      0% { transform: translate(-3%, -2%) scale(1); }
+      50% { transform: translate(3%, 2%) scale(1.02); }
+      100% { transform: translate(-3%, -2%) scale(1); }
+    }
+    @keyframes floatB {
+      0% { transform: translate(4%, -1%) scale(1); }
+      50% { transform: translate(-4%, 1%) scale(1.03); }
+      100% { transform: translate(4%, -1%) scale(1); }
+    }
+
+    /* Layout */
+    .scene {
+      width:100%;
+      max-width:1100px;
+      display:grid;
+      grid-template-columns: 360px 1fr;
+      gap:28px;
+      align-items:start;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.78), rgba(250,250,255,0.66));
+      border: 1px solid rgba(255,255,255,0.6);
+      border-radius: 16px;
+      padding:20px;
+      backdrop-filter: blur(var(--glass-blur));
+      box-shadow: var(--card-shadow);
+    }
+
+    .brand { display:flex; align-items:center; gap:12px; }
+    .logo {
+      width:56px;height:56px;border-radius:12px;
+      background: linear-gradient(135deg,var(--accent),var(--accent-2));
+      display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;
+      box-shadow: 0 8px 24px rgba(30,174,219,0.18);
+    }
+    .title { font-size:20px;font-weight:700;color:var(--text); }
+    .subtitle { font-size:13px;color:var(--muted); margin-top:4px; }
+
+    .menu { margin-top:18px; display:flex;flex-direction:column; gap:12px; }
+    .menu button {
+      background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(255,255,255,0.86));
+      border: 1px solid rgba(10,20,30,0.04);
+      padding:14px 16px;
+      border-radius:12px;
+      display:flex;align-items:center;justify-content:space-between;
+      cursor:pointer; transition: transform .15s ease, box-shadow .15s ease;
+      font-weight:700;color:var(--text);
+      box-shadow: 0 6px 20px rgba(16,24,40,0.05);
+    }
+    .menu button:hover{ transform: translateY(-6px); box-shadow: 0 20px 40px rgba(16,24,40,0.08); }
+
+    .menu .label { display:flex;gap:12px; align-items:center; }
+    .emoji { font-size:18px; width:34px; text-align:center; }
+
+    .controls { display:flex; gap:10px; align-items:center; margin-left:auto; }
+    .control-btn {
+      width:44px;height:44px;border-radius:10px;border:1px solid rgba(7,17,27,0.04);
+      background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;cursor:pointer;
+      box-shadow:0 8px 20px rgba(16,24,40,0.05);
+    }
+
+    .main { display:flex;flex-direction:column; gap:18px; }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(250,250,255,0.82));
+      border:1px solid rgba(255,255,255,0.7);
+      border-radius:14px;
+      padding:20px;
+      backdrop-filter: blur(var(--glass-blur));
+      box-shadow: var(--card-shadow);
+      transition: transform .18s ease, opacity .18s ease;
+    }
+
+    .game-header { display:flex;align-items:center;justify-content:space-between; gap:12px; }
+    .game-title { font-weight:700; font-size:18px; color:var(--text); }
+    .game-sub { color:var(--muted); font-size:13px; }
+
+    /* Wordscape */
+    .word-area { display:flex;flex-direction:column; gap:12px; align-items:center; padding-top:6px; }
+    #word-display {
+      font-size:26px; letter-spacing:8px; font-weight:700; color:var(--text);
+      background: linear-gradient(90deg, rgba(30,174,219,0.06), rgba(58,160,255,0.04));
+      padding:12px 18px; border-radius:12px; min-width:220px; text-align:center;
+    }
+    #letters-container { display:flex;flex-wrap:wrap; justify-content:center; gap:10px; margin-top:6px; }
+    #letters-container button {
+      width:60px;height:60px;border-radius:12px;border:none;background:white;font-size:18px;
+      box-shadow: 0 10px 26px rgba(16,24,40,0.06); cursor:pointer; font-weight:700;
+      transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      color:var(--text);
+    }
+    #letters-container button:disabled { opacity:0.28; transform:scale(0.98); cursor:default; }
+
+    .info-row { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:6px; width:100%; max-width:700px; }
+    .score-pill { background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:white;padding:8px 12px;border-radius:999px; font-weight:800; }
+
+    /* Options */
+    .options { display:flex; flex-direction:column; gap:10px; margin-top:10px; }
+    .option-btn {
+      padding:14px 16px; border-radius:10px; border:1px solid rgba(7,17,27,0.03);
+      background:white; color:var(--text); font-weight:700; cursor:pointer;
+      box-shadow: 0 10px 30px rgba(16,24,40,0.05);
+      transition: transform .12s ease;
+    }
+    .option-btn:hover { transform: translateY(-6px); }
+    .option-btn:disabled { opacity:0.5; cursor:default; transform:none; }
+
+    .feedback { min-height:22px; margin-top:10px; font-weight:700; color:var(--muted); }
+
+    .small { font-size:13px; color:var(--muted); margin-top:10px; }
+
+    @media (max-width:1000px){ .scene{ grid-template-columns: 1fr; max-width:680px; } }
+    @media (max-width:420px){
+      body{ padding:14px }
+      #word-display{ font-size:20px; letter-spacing:6px }
+      .logo{ width:48px;height:48px;font-size:16px }
+    }
+  </style>
+</head>
+<body>
+  <div class="scene" aria-live="polite">
+    <!-- Left Panel -->
+    <aside class="panel" aria-label="Game menu">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="brand">
+          <div class="logo">DH</div>
+          <div>
+            <div class="title">Dental Hub</div>
+            <div class="subtitle">Learn • Diagnose • Practice</div>
+          </div>
+        </div>
+        <div style="margin-left:auto; display:flex; gap:8px;">
+          <div class="controls">
+            <button id="muteBtn" class="control-btn" title="Mute / Unmute" aria-pressed="false" onclick="toggleMute()">
+              <svg id="muteIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11 5L6 9H2v6h4l5 4V5z" fill="#06202b"/>
+                <path d="M19 8l-1.41 1.41L20.17 12l-2.58 2.59L19 16l3-3-3-5z" fill="#7a8a94"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu" role="navigation" aria-label="Choose game">
+        <button onclick="openSection('wordscapeCard'); playTone('click')">
+          <span class="label"><span class="emoji">🧩</span> Dental Wordscape</span>
+          <span style="font-size:13px;color:var(--muted)">Connect letters • Vocabulary</span>
+        </button>
+
+        <button onclick="openSection('quizCard'); playTone('click')">
+          <span class="label"><span class="emoji">📘</span> Dental Quiz Game</span>
+          <span style="font-size:13px;color:var(--muted)">Multiple choice • Ready</span>
+        </button>
+
+        <button onclick="openSection('caseCard'); playTone('click')">
+          <span class="label"><span class="emoji">💬</span> Case Challenge</span>
+          <span style="font-size:13px;color:var(--muted)">Clinical scenarios</span>
+        </button>
+      </div>
+
+      <div class="small">Data source: <strong>GitHub JSON</strong> — edit anytime</div>
+      <div class="small" style="margin-top:8px">Tip: tap or click to begin. Sounds are generated locally (Web Audio API).</div>
+    </aside>
+
+    <!-- Right content -->
+    <main class="main">
+      <!-- Wordscape -->
+      <section id="wordscapeCard" class="card" style="display:none;">
+        <div class="game-header">
+          <div>
+            <div class="game-title">🧩 Dental Wordscape</div>
+            <div class="game-sub">Form dental terms by tapping letters</div>
+          </div>
+          <div class="game-sub">Light • Elegant • Adaptive</div>
+        </div>
+
+        <div class="word-area">
+          <div id="word-display">— — —</div>
+          <div id="letters-container" aria-live="polite"></div>
+          <div class="info-row">
+            <div class="feedback" id="word-msg"></div>
+            <div class="score-pill" id="word-score">0</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quiz -->
+      <section id="quizCard" class="card" style="display:none;">
+        <div class="game-header">
+          <div>
+            <div class="game-title">📘 Dental Quiz</div>
+            <div class="game-sub">Select the best answer</div>
+          </div>
+          <div class="game-sub" id="quiz-progress">Question 1</div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <div id="quiz-question" style="font-weight:700; font-size:18px; color:var(--text);">Loading...</div>
+          <div class="options" id="quiz-options"></div>
+          <div class="feedback" id="quiz-msg"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+            <div class="small">Quiz • Questions from GitHub JSON</div>
+            <div class="score-pill" id="quiz-score">0</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Case -->
+      <section id="caseCard" class="card" style="display:none;">
+        <div class="game-header">
+          <div>
+            <div class="game-title">💬 Case Challenge</div>
+            <div class="game-sub">Choose the best diagnosis / treatment</div>
+          </div>
+          <div class="game-sub" id="case-progress"></div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <div id="case-stem" style="font-weight:700; font-size:16px; color:var(--text);">Loading cases...</div>
+          <div class="options" id="case-options"></div>
+          <div class="feedback" id="case-msg"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+            <div class="small">Cases • Editable on GitHub JSON</div>
+            <div class="score-pill" id="case-score">0</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    /* -------------------------
+       YOUR GitHub Raw JSON URLs (you provided these)
+       ------------------------- */
+    const wordURL = "https://raw.githubusercontent.com/PRENDLYMADAPAKER/DentalGameData/refs/heads/main/dental_words.json";
+    const quizURL = "https://raw.githubusercontent.com/PRENDLYMADAPAKER/DentalGameData/refs/heads/main/dental_quiz.json";
+    const caseURL = "https://raw.githubusercontent.com/PRENDLYMADAPAKER/DentalGameData/refs/heads/main/dental_cases.json";
+
+    /* -------------------------
+       Web Audio: local tone generator (no external audio files)
+       ------------------------- */
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = AudioCtx ? new AudioCtx() : null;
+    let muted = false;
+
+    function toggleMute(){
+      muted = !muted;
+      document.getElementById('muteBtn').setAttribute('aria-pressed', String(muted));
+      const icon = document.getElementById('muteIcon');
+      if(muted){
+        icon.innerHTML = '<path d="M6 9v6h4l5 4V5L10 9H6z" fill="#7a8a94"/><path d="M19 5L15 9m0 6l4 4" stroke="#7a8a94" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>';
+      } else {
+        icon.innerHTML = '<path d="M11 5L6 9H2v6h4l5 4V5z" fill="#06202b"/><path d="M19 8l-1.41 1.41L20.17 12l-2.58 2.59L19 16l3-3-3-5z" fill="#7a8a94"/>';
+      }
+      if(!audioCtx) return;
+      if(!muted && audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
+    }
+
+    function playTone(name){
+      if(muted || !audioCtx) return;
+      const now = audioCtx.currentTime;
+      if(name === 'click'){
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = 'sine'; o.frequency.setValueAtTime(1200, now);
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.exponentialRampToValueAtTime(0.06, now + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(now); o.stop(now + 0.14);
+      } else if(name === 'correct'){
+        const freqs = [880, 1320, 1760];
+        freqs.forEach((f,i)=>{
+          const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+          o.type = 'sine'; o.frequency.setValueAtTime(f, now + i*0.01);
+          g.gain.setValueAtTime(0.0001, now);
+          g.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
+          g.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+          o.connect(g); g.connect(audioCtx.destination);
+          o.start(now + i*0.01); o.stop(now + 0.32);
+        });
+      } else if(name === 'wrong'){
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = 'square'; o.frequency.setValueAtTime(220, now);
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(now); o.stop(now + 0.18);
+      } else if(name === 'win'){
+        const seq = [440,660,880,1320];
+        seq.forEach((f,i)=>{
+          const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+          o.type = 'sine'; o.frequency.setValueAtTime(f, now + i*0.08);
+          g.gain.setValueAtTime(0.0001, now + i*0.08);
+          g.gain.exponentialRampToValueAtTime(0.09, now + i*0.08 + 0.02);
+          g.gain.exponentialRampToValueAtTime(0.0001, now + i*0.08 + 0.28);
+          o.connect(g); g.connect(audioCtx.destination);
+          o.start(now + i*0.08); o.stop(now + i*0.08 + 0.34);
+        });
+      }
+    }
+
+    /* -------------------------
+       Navigation helpers
+       ------------------------- */
+    function hideAllSections(){
+      document.getElementById('wordscapeCard').style.display = 'none';
+      document.getElementById('quizCard').style.display = 'none';
+      document.getElementById('caseCard').style.display = 'none';
+    }
+    function openSection(cardId){
+      hideAllSections();
+      document.getElementById(cardId).style.display = 'block';
+      setTimeout(()=>{
+        if(cardId === 'wordscapeCard') startWordscape();
+        if(cardId === 'quizCard') startQuiz();
+        if(cardId === 'caseCard') startCaseChallenge();
+      }, 120);
+      playTone('click');
+    }
+
+    /* -------------------------
+       WORDSCAPE
+       ------------------------- */
+    let words = [];
+    let wsCurrent = '';
+    let wsShuffled = [];
+    let wsSelected = '';
+    let wsScore = 0;
+
+    const wordDisplayEl = document.getElementById('word-display');
+    const lettersContainerEl = document.getElementById('letters-container');
+    const wordMsgEl = document.getElementById('word-msg');
+    const wordScoreEl = document.getElementById('word-score');
+
+    async function startWordscape(){
+      if(words.length === 0){
+        try{
+          const r = await fetch(wordURL);
+          const data = await r.json();
+          if(Array.isArray(data) && data.length) words = data.map(s => String(s).toUpperCase());
+        } catch(e){
+          console.warn('Failed to fetch words - using defaults', e);
+          words = ["ENAMEL","CROWN","MOLAR","PLAQUE","DENTIN","PULP","CARIES","GINGIVA"];
+        }
+      }
+      wsScore = 0;
+      wordScoreEl.textContent = wsScore;
+      nextWord();
+    }
+
+    function nextWord(){
+      if(!words.length) return;
+      wsCurrent = String(words[Math.floor(Math.random()*words.length)]).toUpperCase().trim();
+      wsCurrent = wsCurrent.replace(/[^A-Z]/g,'');
+      if(wsCurrent.length === 0){ nextWord(); return; }
+      wsShuffled = shuffle(wsCurrent.split(''));
+      wsSelected = '';
+      renderLetters();
+      wordDisplayEl.textContent = Array.from({length: wsCurrent.length}).map(()=>'•').join(' ');
+      wordMsgEl.textContent = '';
+    }
+
+    function shuffle(arr){ return arr.slice().sort(()=>Math.random()-0.5); }
+
+    function renderLetters(){
+      lettersContainerEl.innerHTML = '';
+      wsShuffled.forEach((ch, idx) => {
+        const btn = document.createElement('button');
+        btn.textContent = ch || '';
+        btn.disabled = ch === '';
+        btn.onclick = () => {
+          if(btn.disabled) return;
+          wsSelected += ch;
+          wsShuffled[idx] = '';
+          renderLetters();
+          wordDisplayEl.textContent = wsSelected.split('').join(' ');
+          if(wsSelected.length === wsCurrent.length) {
+            setTimeout(checkWord, 160);
+          }
+          playTone('click');
+        };
+        lettersContainerEl.appendChild(btn);
+      });
+    }
+
+    function checkWord(){
+      if(wsSelected === wsCurrent){
+        wordMsgEl.textContent = 'Correct — ' + wsCurrent;
+        wordMsgEl.style.color = '#0b8f6b';
+        playTone('correct');
+        wsScore += 10;
+        wordScoreEl.textContent = wsScore;
+        setTimeout(nextWord, 700);
+      } else {
+        wordMsgEl.textContent = 'Incorrect — try another word';
+        wordMsgEl.style.color = '#b73636';
+        playTone('wrong');
+        setTimeout(nextWord, 900);
+      }
+    }
+
+    /* -------------------------
+       QUIZ
+       ------------------------- */
+    let quizItems = [];
+    let qIndex = 0;
+    let qScore = 0;
+
+    const quizQuestionEl = document.getElementById('quiz-question');
+    const quizOptionsEl = document.getElementById('quiz-options');
+    const quizMsgEl = document.getElementById('quiz-msg');
+    const quizScoreEl = document.getElementById('quiz-score');
+    const quizProgressEl = document.getElementById('quiz-progress');
+
+    async function startQuiz(){
+      try{
+        const r = await fetch(quizURL);
+        const data = await r.json();
+        if(Array.isArray(data) && data.length) quizItems = data;
+      } catch(e){
+        console.warn('Failed to fetch quiz - using fallback', e);
+        quizItems = [
+          {question:"What covers the crown of a tooth?", options:["Cementum","Dentin","Enamel","Pulp"], answer:"Enamel"}
+        ];
+      }
+      qIndex = 0; qScore = 0; quizScoreEl.textContent = qScore;
+      renderQuiz();
+    }
+
+     function renderQuiz(){
+      if(!quizItems.length) return;
+      if(qIndex >= quizItems.length){
+        quizQuestionEl.textContent = 'Quiz complete 🎉';
+        quizOptionsEl.innerHTML = `<div style="padding:8px;color:var(--muted)">Final score: ${qScore}</div>`;
+        playTone('win');
+        return;
+      }
+      const cur = quizItems[qIndex];
+      quizQuestionEl.textContent = cur.question;
+      quizOptionsEl.innerHTML = '';
+      quizProgressEl.textContent = `Question ${qIndex+1} / ${quizItems.length}`;
+      quizMsgEl.textContent = '';
+      const shuffledOptions = shuffle(cur.options.map(o => String(o)));
+      shuffledOptions.forEach(opt => {
+        const b = document.createElement('button');
+        b.className = 'option-btn';
+        b.textContent = opt;
+        b.onclick = () => {
+          document.querySelectorAll('#quiz-options .option-btn').forEach(x => x.disabled = true);
+          if(opt === cur.answer){
+            quizMsgEl.textContent = 'Correct!';
+            quizMsgEl.style.color = '#0b8f6b';
+            playTone('correct');
+            qScore += 10;
+            quizScoreEl.textContent = qScore;
+          } else {
+            quizMsgEl.textContent = `Incorrect — answer: ${cur.answer}`;
+            quizMsgEl.style.color = '#b73636';
+            playTone('wrong');
+          }
+          setTimeout(()=>{ qIndex++; renderQuiz(); }, 900);
+        };
+        quizOptionsEl.appendChild(b);
+      });
+    }
+
+    /* -------------------------
+       CASE CHALLENGE
+       ------------------------- */
+    let cases = [];
+    let caseIndex = 0;
+    let caseScore = 0;
+
+    const caseStemEl = document.getElementById('case-stem');
+    const caseOptionsEl = document.getElementById('case-options');
+    const caseMsgEl = document.getElementById('case-msg');
+    const caseScoreEl = document.getElementById('case-score');
+    const caseProgressEl = document.getElementById('case-progress');
+
+    async function startCaseChallenge(){
+      try{
+        const r = await fetch(caseURL);
+        const data = await r.json();
+        if(Array.isArray(data) && data.length) cases = data;
+      } catch(e){
+        console.warn('Failed to fetch cases - fallback', e);
+        cases = [
+          {case:"25-year-old with sharp pain on biting in a lower molar with deep caries. Most likely?", options:["Gingivitis","Pulpitis","Periodontitis","Pericoronitis"], answer:"Pulpitis"}
+        ];
+      }
+      caseIndex = 0; caseScore = 0; caseScoreEl.textContent = caseScore;
+      renderCase();
+    }
+
+    function renderCase(){
+      if(!cases.length) return;
+      if(caseIndex >= cases.length){
+        caseStemEl.textContent = 'All cases completed 🎉';
+        caseOptionsEl.innerHTML = `<div style="padding:8px;color:var(--muted)">Final score: ${caseScore}</div>`;
+        playTone('win');
+        return;
+      }
+      const cur = cases[caseIndex];
+      caseStemEl.textContent = cur.case;
+      caseOptionsEl.innerHTML = '';
+      caseProgressEl.textContent = `Case ${caseIndex+1} / ${cases.length}`;
+      caseMsgEl.textContent = '';
+      const shuffledOpts = shuffle(cur.options.map(o => String(o)));
+      shuffledOpts.forEach(opt => {
+        const b = document.createElement('button');
+        b.className = 'option-btn';
+        b.textContent = opt;
+        b.onclick = () => {
+          document.querySelectorAll('#case-options .option-btn').forEach(x => x.disabled = true);
+          if(opt === cur.answer){
+            caseMsgEl.textContent = 'Correct!';
+            caseMsgEl.style.color = '#0b8f6b';
+            playTone('correct');
+            caseScore += 10;
+            caseScoreEl.textContent = caseScore;
+          } else {
+            caseMsgEl.textContent = `Incorrect — answer: ${cur.answer}`;
+            caseMsgEl.style.color = '#b73636';
+            playTone('wrong');
+          }
+          setTimeout(()=>{ caseIndex++; renderCase(); }, 900);
+        };
+        caseOptionsEl.appendChild(b);
+      });
+    }
+
+    /* -------------------------
+       Init / Helpers
+       ------------------------- */
+    hideAllSections();
+
+    // resume audio context on first interaction
+    window.addEventListener('pointerdown', () => {
+      if(audioCtx && audioCtx.state === 'suspended' && !muted) audioCtx.resume().catch(()=>{});
+    }, { once:true });
+
+    // expose for debugging
+    window.openSection = openSection;
+    window.toggleMute = toggleMute;
+    window.playTone = playTone;
+  </script>
+</body>
+</html>
