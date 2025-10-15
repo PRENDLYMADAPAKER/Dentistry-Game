@@ -1339,4 +1339,4 @@ window.dentalQuiz = [
     "options": ["Water’s view", "Lateral skull view", "Periapical", "Occlusal"],
     "answer": "Water’s view"
   }
-   ],
+   ];
